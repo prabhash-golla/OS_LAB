@@ -1,0 +1,90 @@
+[11:28] Customer 11 leaves (no empty table)
+[11:31] Customer 12 leaves (no empty table)
+[11:32] Customer 13 leaves (no empty table)
+[11:35] Customer 14 leaves (no empty table)
+[11:37] Customer 15 leaves (no empty table)
+[11:0] Customer 2 arrives (count = 2)
+[11: 1] Customer 2: Order placed to Waiter V
+[11:13] Customer 2 gets food [Waiting time = 12]
+[11:42] Customer 2 leaves
+[11:44] Customer 16 leaves (no empty table)
+[11:0] Customer 3 arrives (count = 1)
+[11: 1] Customer 3: Order placed to Waiter W
+[11:18] Customer 3 gets food [Waiting time = 17]
+[11:47] Customer 3 leaves
+[11:0] Customer 1 arrives (count = 4)
+[11: 1] Customer 1: Order placed to Waiter U
+[11:23] Customer 1 gets food [Waiting time = 22]
+[11:52] Customer 1 leaves
+[11:51] Customer 17 leaves (no empty table)
+[11:56] Customer 18 leaves (no empty table)
+[11:59] Customer 19 leaves (no empty table)
+[12:0] Customer 20 leaves (no empty table)
+[11:0] Customer 5 arrives (count = 2)
+[11: 1] Customer 5: Order placed to Waiter Y
+[11:33] Customer 5 gets food [Waiting time = 32]
+[12: 2] Customer 5 leaves
+[12:2] Customer 21 leaves (no empty table)
+[12:5] Customer 22 leaves (no empty table)
+[11:0] Customer 4 arrives (count = 4)
+[11: 1] Customer 4: Order placed to Waiter X
+[11:38] Customer 4 gets food [Waiting time = 37]
+[12: 7] Customer 4 leaves
+[11:0] Customer 6 arrives (count = 2)
+[11: 1] Customer 6: Order placed to Waiter U
+[11:43] Customer 6 gets food [Waiting time = 42]
+[12:12] Customer 6 leaves
+[12:14] Customer 23 leaves (no empty table)
+[12:15] Customer 24 leaves (no empty table)
+[12:15] Customer 25 leaves (no empty table)
+[11:9] Customer 8 arrives (count = 1)
+[11:10] Customer 8: Order placed to Waiter W
+[11:48] Customer 8 gets food [Waiting time = 38]
+[12:17] Customer 8 leaves
+[11:0] Customer 7 arrives (count = 1)
+[11: 1] Customer 7: Order placed to Waiter V
+[11:55] Customer 7 gets food [Waiting time = 54]
+[12:24] Customer 7 leaves
+[11:14] Customer 9 arrives (count = 1)
+[11:15] Customer 9: Order placed to Waiter X
+[11:56] Customer 9 gets food [Waiting time = 41]
+[12:25] Customer 9 leaves
+[11:21] Customer 10 arrives (count = 1)
+[11:22] Customer 10: Order placed to Waiter Y
+[11:54] Customer 10 gets food [Waiting time = 32]
+[12:22] Customer 26 leaves (no empty table)
+[12:27] Customer 27 leaves (no empty table)
+[12:35] Customer 28 leaves (no empty table)
+[12:44] Customer 29 leaves (no empty table)
+[12:50] Customer 30 leaves (no empty table)
+[12:52] Customer 31 leaves (no empty table)
+[12:54] Customer 32 leaves (no empty table)
+[12:58] Customer 33 leaves (no empty table)
+[1:0] Customer 34 leaves (no empty table)
+[1:3] Customer 35 leaves (no empty table)
+[1:3] Customer 36 leaves (no empty table)
+[1:3] Customer 37 leaves (no empty table)
+[1:12] Customer 38 leaves (no empty table)
+[1:21] Customer 39 leaves (no empty table)
+[1:30] Customer 40 leaves (no empty table)
+[1:33] Customer 41 leaves (no empty table)
+[1:40] Customer 42 leaves (no empty table)
+[1:46] Customer 43 leaves (no empty table)
+[1:50] Customer 44 leaves (no empty table)
+[1:50] Customer 45 leaves (no empty table)
+[1:51] Customer 46 leaves (no empty table)
+[1:58] Customer 47 leaves (no empty table)
+[2:6] Customer 48 leaves (no empty table)
+[2:6] Customer 49 leaves (no empty table)
+[2:7] Customer 50 leaves (no empty table)
+[2:10] Customer 51 leaves (no empty table)
+[2:18] Customer 52 leaves (no empty table)
+[2:18] Customer 53 leaves (no empty table)
+[2:26] Customer 54 leaves (no empty table)
+[2:30] Customer 55 leaves (no empty table)
+[2:31] Customer 56 leaves (no empty table)
+[2:39] Customer 57 leaves (no empty table)
+[2:43] Customer 58 leaves (no empty table)
+[2:46] Customer 59 leaves (no empty table)
+[2:52] Customer 60 leaves (no empty table)
+[3:0] Customer 61 leaves (no empty table)
