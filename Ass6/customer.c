@@ -15,69 +15,90 @@ int * M;
 
 void cmain(int customerId,int arrivalTime,int numberofPersons)
 {
+    //------- Check for Late Arrival ------- //
     if(arrivalTime>240)
     {
+        printf("[%02d:%02d %cm] \t\t\t\t\t\tCustomer %d leaves (late arrival)\n",(10+arrivalTime/60)%12+1,arrivalTime%60,(arrivalTime/60)? 'p':'a',customerId);
+        fflush(stdout);
         exit(EXIT_SUCCESS);
     }
     P(Sem,0);
-    // printf("M[1] : %d\n",M[1]);
+    //------- Check for Empty Table ------- //
     if(M[1])
     {
-        printf("[%d:%d] Customer %d arrives (count = %d)\n",(10+arrivalTime/60)%12+1,arrivalTime%60,customerId,numberofPersons);
-        M[1]--;
-        V(Sem,0);
-        usleep(100000);
-        P(Sem,0);
-        if(M[0]<=arrivalTime+1)
-        {
-            M[0] = arrivalTime+1;
-        }
+        // ------- Write in Waiter Queue & Wake him up  ------- //
+        if(M[0]<=arrivalTime) M[0] = arrivalTime;
         else
         {
             perror("Time Error");
             V(Sem, 0);
             exit(EXIT_FAILURE);
         }
+        printf("[%02d:%02d %cm] Customer %d arrives (count = %d)\n",(10+arrivalTime/60)%12+1,arrivalTime%60,(arrivalTime/60)? 'p':'a',customerId,numberofPersons);
+        fflush(stdout);
+        M[1]--;
         int waiterId = M[2];
-        printf("[%2d:%2d] Customer %d: Order placed to Waiter %c\n",(10+(arrivalTime+1)/60)%12+1,(arrivalTime+1)%60,customerId,'U'+waiterId);
-        int FW = M[102+waiterId*200];
-        M[104+waiterId*200+2*FW] = customerId;
-        M[105+waiterId*200+2*FW] = numberofPersons;
-        M[101+waiterId*200]++;
         M[2] = (M[2]+1)%5;
+        //------- BW is the Pointer to End of the Waiter Queue ------- //
+        int BW = M[103+waiterId*200]++;
+        M[104+waiterId*200+2*BW] = customerId;
+        M[105+waiterId*200+2*BW] = numberofPersons;
+        M[101+waiterId*200]++;
+        V(Sem,0);
+
+        // ------- Wake Up the Waiter ------- //
         V(Sem, 2+waiterId);
+
+        // ------- Wait for Order to be Placed ------- //
+        P(Sem, 6+customerId);
+
+        // ------- Order Placed ------- //
+        P(Sem,0);
+        printf("[%02d:%02d %cm] \tCustomer %d: Order placed to Waiter %c\n",(10+(M[0])/60)%12+1,(M[0])%60,(M[0]/60)? 'p':'a',customerId,'U'+waiterId);
+        fflush(stdout);
         V(Sem, 0);
 
+        // ------- Wait for Food to be Served ------- //
         P(Sem,6+customerId);
+
+        // ------- Food Served ------- //
         P(Sem,0);
-        int time1 = ++M[0];
-        printf("[%2d:%2d] Customer %d gets food [Waiting time = %d]\n",(10+time1/60)%12+1,(time1+1)%60,customerId,M[0]-arrivalTime);
+        int time1 = M[0];
+        printf("[%02d:%02d %cm] \t\tCustomer %d gets food [Waiting time = %d]\n",(10+time1/60)%12+1,(time1)%60,(time1/60)? 'p':'a',customerId,time1-arrivalTime);
+        fflush(stdout);
         V(Sem,0);
+
+        // ------- Eat Food ------- //
         usleep(30*100000);
 
+        // ------- Finish Eating ------- //
         P(Sem,0);
-        if(M[0]<=time1+30)
-        {
-            M[0] = time1+30;
-        }
+        M[1]++;
+        if(M[0]<=time1+30) M[0] = time1+30;
         else
         {
             perror("Time Error");
             V(Sem, 0);
             exit(EXIT_FAILURE);
         }
-        printf("[%2d:%2d] Customer %d leaves\n",(10+M[0]/60)%12+1,M[0]%60,customerId);
+        printf("[%02d:%02d %cm] \t\t\tCustomer %d finishes eating and leaves\n",(10+M[0]/60)%12+1,M[0]%60,(M[0]/60)? 'p':'a',customerId);
+        fflush(stdout);
         V(Sem,0);
     }
     else
     {
-        printf("[%d:%d] Customer %d leaves (no empty table)\n",(10+arrivalTime/60)%12+1,arrivalTime%60,customerId);
+        // ------- No Empty Table ------- //
+        printf("[%02d:%02d %cm] \t\t\t\t\t\tCustomer %d leaves (no empty table)\n",(10+arrivalTime/60)%12+1,arrivalTime%60,(arrivalTime/60)? 'p':'a',customerId);
+        fflush(stdout);
+        V(Sem,0);
     }
+    shmdt(M);
     exit(EXIT_SUCCESS);
 }
 
 int main()
 {
+    //------- Get Shared Memory & Semaphore ------- //
     key_t shm_key = ftok(".", 'P');
     key_t sem_key = ftok(".", 'Q');
     Shm = shmget(shm_key, 2000 * sizeof(int), 0777);
@@ -88,6 +109,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    //------- Attach to Shared Memory ------- //
     M = (int *)shmat(Shm, NULL, 0);
     if (M == (int *)-1) 
     {
@@ -95,6 +117,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    //------- Read from File ------- //
     FILE* fptr = fopen("customers.txt","r");
 
     if(!fptr)
@@ -103,24 +126,26 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    int ID,arrivalTime,count,lastArrivalTime=0;
+    int ID,arrivalTime,count,lastArrivalTime=0,lastID=0;
 
-    while(fscanf(fptr,"%d %d %d",&ID,&arrivalTime,&count)!=EOF)
+    while(fscanf(fptr,"%d %d %d",&ID,&arrivalTime,&count))
     {
-        if(ID==-1)
-        {
-            break;
-        }
+        if(ID==-1) break;
         usleep((arrivalTime-lastArrivalTime)*100000);
         pid_t pid = fork();
-        if(pid==0)
+        if(pid==-1)
         {
-            cmain(ID,arrivalTime,count);
+            perror("fork() failed");
+            exit(EXIT_FAILURE);
         }
+        if(pid==0) cmain(ID,arrivalTime,count);
         lastArrivalTime = arrivalTime;
+        lastID = ID;
     }
-
     fclose(fptr);
+
+    //------- Wait for Customers to Leave ------- //
+    for(int i=0;i<lastID;i++) wait(NULL);
 
     return 0;
 }
