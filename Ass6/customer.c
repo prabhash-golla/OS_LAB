@@ -128,9 +128,10 @@ int main()
 
     int ID,arrivalTime,count,lastArrivalTime=0,lastID=0;
 
-    while(fscanf(fptr,"%d %d %d",&ID,&arrivalTime,&count))
+    while(fscanf(fptr,"%d %d %d",&ID,&arrivalTime,&count)==3)
     {
         if(ID==-1) break;
+        //------- Sleep till time becomes Arrival Time ------- //
         usleep((arrivalTime-lastArrivalTime)*100000);
         pid_t pid = fork();
         if(pid==-1)

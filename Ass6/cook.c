@@ -16,6 +16,7 @@ int * M,j=1;
 
 void sig(int sig)
 {
+    printf("Cooks received shutdown signal\n");
     shmctl(Shm, IPC_RMID, NULL);
     semctl(Sem, 0, IPC_RMID);
     exit(EXIT_SUCCESS);
@@ -74,6 +75,7 @@ void cmain(int i)
         {
             printf("[%02d:%02d %cm] %sCook %c: Leaving\n",(10+M[0]/60)%12+1,M[0]%60,(M[0]/60)? 'p':'a',i? "\t":"",'C'+i);
             fflush(stdout);
+            P(Sem,207);
             if(j==1) j=0;
             else 
             {
@@ -82,6 +84,7 @@ void cmain(int i)
                     V(Sem, 2+i);
                 }
             }
+            V(Sem,207);
             V(Sem, 0);
             shmdt(M);
             exit(EXIT_SUCCESS);
@@ -98,7 +101,7 @@ int main()
     pid_t pid_C,pid_D;
 
     Shm = shmget(shm_key, 2000 * sizeof(int), IPC_CREAT | 0777 | IPC_EXCL);
-    Sem = semget(sem_key, 207, IPC_CREAT | 0777 | IPC_EXCL);
+    Sem = semget(sem_key, 208, IPC_CREAT | 0777 | IPC_EXCL);
     
     if (Shm == -1 || Sem == -1) 
     {
@@ -115,13 +118,30 @@ int main()
     }
 
     // ------- Initialization ------- //
-    M[0] = 0;
-    M[1] = 10;
-    M[2] = 0;
-    M[3] = 0;  
+    M[0] = 0;        // ------- time ------- //
+    M[1] = 10;       // ------- number of empty tables -------//
+    M[2] = 0;        // ------- waiter number to serve the next customer -------//
+    M[3] = 0;        // ------- number of orders pending for the cooks -------//
 
+    // ------- Semophores ------- //
+    /*
+        +-------+--------+
+        |Index-i|Protects|
+        +-------+--------+
+        |   0   |    M   |
+        +-------+--------+
+        |   1   |  Cook  |
+        +-------+--------+
+        |  2-6  |Waiter-i|
+        +-------+--------+
+        | 7-206 |Customer|
+        +-------+--------+
+        |  207  |    j   |
+        +-------+--------+
+    */
     semctl(Sem, 0, SETVAL, 1);
     for(int i=1;i<207;i++) semctl(Sem, i, SETVAL, 0);
+    semctl(Sem, 207, SETVAL, 1);
 
     // ------- Cook's Creation ------- //
     if(!(pid_C=fork())) cmain(0);

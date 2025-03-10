@@ -59,8 +59,16 @@ void wmain(int waiterNo)
                 fflush(stdout);
                 V(Sem, 0);
                 V(Sem, 6+customerId);
-                shmdt(M);
-                free(space);
+                if (space != NULL) 
+                {
+                    free(space);
+                    space = NULL;
+                }
+                if (M != (int*)-1) 
+                {
+                    shmdt(M);
+                    M = (int*)-1;
+                }
                 exit(EXIT_SUCCESS);
             }
             V(Sem, 0);
@@ -76,27 +84,29 @@ void wmain(int waiterNo)
             //------- FW is the Pointer to Start of the Waiter Queue ------- //
             int FW = M[102+waiterNo*200]++;
             int customerId = M[104+waiterNo*200+FW*2];
+            int count = M[105+waiterNo*200+FW*2];
             //------- B is the Pointer to End of the Cook Queue ------- //
             int B = M[1101]++;  
             M[1102+B*3] = waiterNo;
             M[1103+B*3] = customerId;
-            M[1104+B*3] = M[105+waiterNo*200+FW*2];
+            M[1104+B*3] = count;
             M[3]++;
             int presentTime = M[0];
             V(Sem,0);
-
+            
             // ------- For Taking the Order From Customer ------- //
             usleep(100000);
-
+            
             // ------- Order Taken ------- //
-            P(Sem,0);
-            printf("[%02d:%02d %cm] %sWaiter %c: Placing order for Customer %d (count = %d)\n",(10+(presentTime+1)/60)%12+1,(presentTime+1)%60,(presentTime/60)? 'p':'a',space,'U'+waiterNo,M[104+waiterNo*200+FW*2],M[105+waiterNo*200+FW*2]);
+            printf("[%02d:%02d %cm] %sWaiter %c: Placing order for Customer %d (count = %d)\n",(10+(presentTime+1)/60)%12+1,(presentTime+1)%60,((presentTime+1)/60)? 'p':'a',space,'U'+waiterNo,customerId,count);
             fflush(stdout);
+            P(Sem,0);
             if(M[0] <= presentTime+1) M[0] = presentTime+1;
             else
             {
                 perror("Time Error");
                 V(Sem, 0);
+                shmdt(M);
                 exit(EXIT_FAILURE);
             }
             V(Sem,0);
