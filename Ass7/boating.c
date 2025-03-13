@@ -60,9 +60,15 @@ void *Boat(void * arg)
     free(arg);
 
     printf("Boat \t%3d\tReady\n",boatId);
+    fflush(stdout);
 
     // ------- Initilize barrier ------- //
-    pthread_barrier_init(&BB[boatId-1], NULL, 2);
+    if (pthread_barrier_init(&BB[boatId-1], NULL, 2) != 0) 
+    {
+        perror("Barrier initialization failed");
+        exit(EXIT_FAILURE);
+    }
+    
 
     // ------- Make Boat Ready ------- //
     pthread_mutex_lock(&bmtx);
@@ -81,7 +87,7 @@ void *Boat(void * arg)
         {
             V(&boat);
             pthread_mutex_unlock(&bmtx);
-            exit(EXIT_SUCCESS);
+            pthread_exit(NULL);
         }
         pthread_mutex_unlock(&bmtx);
 
@@ -95,23 +101,26 @@ void *Boat(void * arg)
         pthread_mutex_unlock(&bmtx);
 
         printf("Boat \t%3d\tStart of ride for Visitor %3d  (ride time = %2d)\n",boatId,riderId,rtime);
+        fflush(stdout);
 
         // ------- Sleep for rtime ------- //
         usleep(rtime*100000);
 
         printf("Boat \t%3d\tEnd of ride for Visitor %3d (ride time = %2d)\n",boatId,riderId,rtime);
+        fflush(stdout);
 
         // ------- Set Boat Free ------- //
         pthread_mutex_lock(&bmtx);
         BA[boatId-1] = 1;
         BC[boatId-1] = -1;
         n--;
+
         if(n==0)
         {
+            V(&boat);
             pthread_mutex_unlock(&bmtx);
             pthread_barrier_wait(&EOS);
-            V(&boat);
-            exit(EXIT_SUCCESS);
+            pthread_exit(NULL);
         } 
         pthread_mutex_unlock(&bmtx);
     }
@@ -128,18 +137,20 @@ void *Rider(void* arg)
     int rtime = random_time(15, 60);
 
     printf("Visitor\t%3d\tStarts sightseeing for %3d minutes\n",riderId,vtime);
+    fflush(stdout);
 
     // ------- Sleep for vtime ------- //
     usleep(vtime*100000);
 
     printf("Visitor\t%3d\tReady to ride a boat (ride time = %2d)\n",riderId,rtime);
+    fflush(stdout);
 
     V(&boat);
     P(&rider);
 
     // ------- Find a Empty Boat ------- //
-    int boat = -1;
-    while (boat==-1)
+    int selected_boat = -1;
+    while (selected_boat==-1)
     {
         pthread_mutex_lock(&bmtx);
         for(int j=0;j<m;j++)
@@ -149,27 +160,29 @@ void *Rider(void* arg)
                 
                 BC[j] = riderId;
                 BT[j] = rtime;
-                boat = j + 1;
+                selected_boat = j + 1;
                 break;
             }
         }
         pthread_mutex_unlock(&bmtx);
         
-        if(boat == -1)
+        if(selected_boat == -1)
         {
             usleep(100000);
         }
     }
 
-    printf("Visitor\t%3d\tFinds boat %2d\n", riderId, boat);
+    printf("Visitor\t%3d\tFinds boat %2d\n", riderId, selected_boat);
+    fflush(stdout);
 
     // ------- Wait on Boat Barrier ------- //
-    pthread_barrier_wait(&BB[boat-1]);
+    pthread_barrier_wait(&BB[selected_boat - 1]);
 
     // ------- Sleep for rtime ------- //
     usleep(rtime*100000);
 
     printf("Visitor\t%3d\tLeaving\n",riderId);
+    fflush(stdout);
 
 }
 
@@ -178,6 +191,7 @@ int main(int argc,char* argv[])
     if(argc!=3)
     {
         printf("The Input should conatain : %s <m> & <n>\n",argv[0]);
+        fflush(stdout);
         exit(EXIT_FAILURE);
     }
     
@@ -186,15 +200,17 @@ int main(int argc,char* argv[])
     n = atoi(argv[2]);
     int k = n;
 
-    if( n<20 | n>100)
+    if( n<20 || n>100)
     {
         printf("<n> Out of Range\n");
+        fflush(stdout);
         exit(EXIT_FAILURE);
     }
     
-    if( m<5 | m>10)
+    if( m<5 || m>10)
     {
         printf("<m> Out of Range\n");
+        fflush(stdout);
         exit(EXIT_FAILURE);
     }
 
@@ -213,9 +229,19 @@ int main(int argc,char* argv[])
     pthread_t *boat_threads = (pthread_t*)malloc(m * sizeof(pthread_t));
     for (int i = 0; i < m; i++) 
     {
-        int *boadId = (int*)malloc(sizeof(int));
-        *boadId = i + 1;  
-        pthread_create(&boat_threads[i], NULL, Boat, boadId);
+        int *boatId = (int*)malloc(sizeof(int));
+        if (!boatId) 
+        {
+            perror("Memory allocation failed");
+            exit(EXIT_FAILURE);
+        }
+
+        *boatId = i + 1;
+        if (pthread_create(&boat_threads[i], NULL, Boat, boatId) != 0) 
+        {
+            perror("Boat thread creation failed");
+            exit(EXIT_FAILURE);
+        }        
     }
     
     // ------- Creating Rider Threads ------- //
@@ -223,8 +249,17 @@ int main(int argc,char* argv[])
     for (int i = 0; i < n; i++) 
     {
         int *riderId = (int*)malloc(sizeof(int));
+        if (!riderId) {
+            perror("Memory allocation failed");
+            exit(EXIT_FAILURE);
+        }
+
         *riderId = i + 1;  
-        pthread_create(&rider_threads[i], NULL, Rider, riderId);
+        if(pthread_create(&rider_threads[i], NULL, Rider, riderId)!=0)
+        {
+            perror("Boat thread creation failed");
+            exit(EXIT_FAILURE);
+        }     
     }
 
     // ------- Wait All Rider Threads Join ------- //
