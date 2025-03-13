@@ -100,5 +100,5 @@ $ ./cook
 [03:03 pm] Cook C: Prepared order (Waiter W, Customer 60, Count 2)
 [03:03 pm] Cook C: Leaving
 [03:06 pm] 	Cook D: Prepared order (Waiter X, Customer 61, Count 1)
-[03:06 pm] Cook D: Leaving
+[03:06 pm]  Cook D: Leaving
 $

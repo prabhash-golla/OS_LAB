@@ -102,7 +102,7 @@ int main()
     key_t shm_key = ftok(".", 'P');
     key_t sem_key = ftok(".", 'Q');
     Shm = shmget(shm_key, 2000 * sizeof(int), 0777);
-    Sem = semget(sem_key, 7, 0777);
+    Sem = semget(sem_key, 207, 0777);
     if (Shm == -1 || Sem == -1) 
     {
         perror("shmget() or semget() failed");
@@ -147,6 +147,11 @@ int main()
 
     //------- Wait for Customers to Leave ------- //
     for(int i=0;i<lastID;i++) wait(NULL);
+
+    // ------- Clean Up ------- //
+    shmdt(M);
+    shmctl(Shm, IPC_RMID, NULL);
+    semctl(Sem, 0, IPC_RMID);
 
     return 0;
 }
